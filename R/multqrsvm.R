@@ -1,3 +1,6 @@
+#' @importFrom utils globalVariables data
+utils::globalVariables(c("tt")) # avoid the variable checking
+
 #' Fits multiple Quantile Regression SVM
 #'
 #' @param x An n X m matrix containing the predictors (n = number of observatiosn, m = number of predictors) .
@@ -49,32 +52,7 @@
 #' @export
 multqrsvm <- function(x, y, kernel = "rbfdot", cost = 1, tau = c(0.05, 0.25, 0.5, 0.75, 0.95),
                       sigma = 5, degree = 2, scale = 1, offset = 1, order = 1, doPar = FALSE, clustnum = 2){
-  if (kernel == "rbfdot") {
-    kern <- rbfdot(sigma = sigma)
-    kernmat <- kernelMat(kern, x)
-  } else if (kernel == "polydot") {
-    kern <- polydot(degree = degree, scale = scale, offset = offset)
-    kernmat <- kernelMat(kern, x)
-  } else if (kernel == "vanilladot") {
-    kern <- vanilladot()
-    kernmat <- kernelMat(kern, x)
-  } else if (kernel == "tanhdot") {
-    kern <- tanhdot(scale = scale, offset = offset)
-    kernmat <- kernelMat(kern, x)
-  } else if (kernel == "laplacedot") {
-    kern <- laplacedot(sigma = sigma)
-    kernmat <- kernelMat(kern, x)
-  } else if (kernel == "besseldot") {
-    kern <- besseldot(sigma = sigma, order = order, degree = degree)
-    kernmat <- kernelMat(kern, x)
-  } else if (kernel == "anovadot") {
-    kern <- anovadot(sigma = sigma, degree = degree)
-    kernmat <- kernelMat(kern, x)
-  } else {
-    stop("kernelMat not valid! Check if valid kernel type stated!")
-  }
-  pdmat <- as.matrix(nearPD(kernmat)$mat)
-
+  kernelInfo <- getKernFunc(x, kernel, sigma, degree, scale, offset, order)
   `%foreach_op%` <- `%do%`
   if (doPar) {
     message("Running parallelly with ", clustnum, " clusters.")
@@ -82,10 +60,10 @@ multqrsvm <- function(x, y, kernel = "rbfdot", cost = 1, tau = c(0.05, 0.25, 0.5
     `%foreach_op%` <- `%dopar%`
   }
   models <- foreach(tt = tau, .packages = "qrsvm") %foreach_op% {
-    model <- qrsvm(x = x, y = y, kernel = pdmat, cost = cost,
+    model <- qrsvm(x = x, y = y, kernel = kernelInfo$pdmat, cost = cost,
                    tau = tt, sigma = sigma, degree = degree,
                    scale = scale, offset = offset, order = order)
-    model <- modifyList(model, list(kernel = kern))
+    model <- modifyList(model, list(kernel = kernelInfo$kernel))
     return(model)
   }
 

@@ -1,3 +1,33 @@
+#' @importFrom kernlab rbfdot polydot vanilladot tanhdot laplacedot besseldot anovadot
+#' @importFrom Matrix nearPD
+getKernFunc <- function(x, kernel, sigma, degree, scale, offset, order) {
+  if (kernel == "rbfdot") {
+    kern <- rbfdot(sigma = sigma)
+    kernmat <- kernelMat(kern, x)
+  } else if (kernel == "polydot") {
+    kern <- polydot(degree = degree, scale = scale, offset = offset)
+    kernmat <- kernelMat(kern, x)
+  } else if (kernel == "vanilladot") {
+    kern <- vanilladot()
+    kernmat <- kernelMat(kern, x)
+  } else if (kernel == "tanhdot") {
+    kern <- tanhdot(scale = scale, offset = offset)
+    kernmat <- kernelMat(kern, x)
+  } else if (kernel == "laplacedot") {
+    kern <- laplacedot(sigma = sigma)
+    kernmat <- kernelMat(kern, x)
+  } else if (kernel == "besseldot") {
+    kern <- besseldot(sigma = sigma, order = order, degree = degree)
+    kernmat <- kernelMat(kern, x)
+  } else if (kernel == "anovadot") {
+    kern <- anovadot(sigma = sigma, degree = degree)
+    kernmat <- kernelMat(kern, x)
+  } else {
+    stop("kernelMat not valid! Check if valid kernel type stated!")
+  }
+  return(list(kernel = kern, kernmat = kernmat, pdmat = as.matrix(nearPD(kernmat)$mat)))
+}
+
 #' Fits a quantile regression SVM based on the Pinball Loss
 #'
 #' @param x An n X m matrix containing the predictors (n = number of observatiosn, m = number of predictors).
@@ -14,8 +44,6 @@
 #'   other SVM implementations.
 #' @return An object of class "qrsvm".
 #' @references "Nonparametric Quantile Regression" by I.Takeuchi, Q.V. Le, T. Sears, A.J. Smola (2004)
-#' @importFrom kernlab rbfdot polydot vanilladot tanhdot laplacedot besseldot anovadot
-#' @importFrom Matrix nearPD
 #' @importFrom quadprog solve.QP
 #' @examples
 #' # data generation
@@ -46,34 +74,9 @@
 qrsvm <- function(x, y, kernel = "rbfdot", cost = 1,    tau = 0.95,
                   sigma = 5, degree = 2, scale = 1, offset = 1, order = 1) {
   if (class(kernel) == "character") {
-    if (kernel == "rbfdot") {
-      kern <- rbfdot(sigma = sigma)
-      kernmat <- kernelMat(kern, x)
-    } else if (kernel == "polydot") {
-      kern <- polydot(degree = degree, scale = scale, offset = offset)
-      kernmat <- kernelMat(kern, x)
-    } else if (kernel == "vanilladot") {
-      kern <- vanilladot()
-      kernmat <- kernelMat(kern, x)
-    } else if (kernel == "tanhdot") {
-      kern <- tanhdot(scale = scale, offset = offset)
-      kernmat <- kernelMat(kern, x)
-    } else if (kernel == "laplacedot") {
-      kern <- laplacedot(sigma = sigma)
-      kernmat <- kernelMat(kern, x)
-    } else if (kernel == "besseldot") {
-      kern <- besseldot(sigma = sigma, order = order, degree = degree)
-      kernmat <- kernelMat(kern, x)
-    } else if (kernel == "anovadot") {
-      kern <- anovadot(sigma = sigma, degree = degree)
-      kernmat <- kernelMat(kern, x)
-    } else {
-      stop("kernelMat not valid! Check if valid kernel type stated!")
-    }
-    pdmat <- as.matrix(nearPD(kernmat)$mat)
+    kernelInfo <- getKernFunc(x, kernel, sigma, degree, scale, offset, order)
   } else if (class(kernel) == "matrix") {
-    pdmat <- kernel
-    kernmat <- kernel
+    kernelInfo <- list(kernel = 0, pdmat = kernel, kernmat = kernel)
     if (nrow(kernel) != ncol(kernel))
       stop("Given kernelMat has different col- rownumbers!! Check!")
   }
@@ -81,25 +84,17 @@ qrsvm <- function(x, y, kernel = "rbfdot", cost = 1,    tau = 0.95,
   Amat <- rbind(rep(1, nrow(x)), diag(x = 1, nrow(x), nrow(x)),
                 diag(x = -1, nrow(x), nrow(x)))
   b0 <- c(0, rep((cost * (tau - 1)), nrow(x)), rep(-cost * tau, nrow(x)))
-  erg <- solve.QP(Dmat = pdmat, dvec = y, Amat = t(Amat),
+  erg <- solve.QP(Dmat = kernelInfo$pdmat, dvec = y, Amat = t(Amat),
                   bvec = b0, meq = 1, factorized = FALSE)
   alpha <- erg$solution
-  f <- alpha %*% kernmat
+  f <- alpha %*% kernelInfo$kernmat
   offshift <- which.min((round(alpha, 3) - (cost * tau))^2 + (round(alpha, 3) - (cost * (tau - 1)))^2)
   b <- y[offshift] - f[offshift]
-  fnew <- alpha %*% kernmat + b
+  fnew <- alpha %*% kernelInfo$kernmat + b
 
-  if (class(kernel) == "character") {
-    model <- list(alpha = alpha, xtrain = x, kernel = kern,
-                  sigma = sigma, cost = cost, b0 = b, fitted = as.numeric(fnew),
-                  tau = tau, scale = scale, offset = offset, order = order,
-                  kernstring = kernel, y = y)
-  } else if (class(kernel) == "matrix") {
-    model <- list(alpha = alpha, xtrain = x, kernel = 0,
-                  sigma = sigma, cost = cost, b0 = b, fitted = as.numeric(fnew),
-                  tau = tau, scale = scale, offset = offset, order = order,
-                  kernstring = kernel, y = y)
-  }
-  class(model) <- "qrsvm"
+  model <- structure(list(alpha = alpha, xtrain = x, kernel = kernelInfo$kernel,
+                          sigma = sigma, cost = cost, b0 = b, fitted = as.numeric(fnew),
+                          tau = tau, scale = scale, offset = offset, order = order,
+                          kernstring = kernel, y = y), class = "qrsvm")
   return(model)
 }

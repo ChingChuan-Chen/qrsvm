@@ -45,4 +45,3 @@ predict.qrsvm <- function(object, newdata, ...) {
     stop("Newdata has different number of columns than xtrain please check consistency!")
   return(kernelMult(object$kernel, newdata, xold, object$alpha) + object$b0)
 }
-
