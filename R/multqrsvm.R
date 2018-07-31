@@ -1,18 +1,20 @@
 #' Fits multiple Quantile Regression SVM
 #'
-#' @param x An n X m matrix containing the predictors (n= number of observatiosn, m = number of predictors) .
+#' @param x An n X m matrix containing the predictors (n = number of observatiosn, m = number of predictors) .
 #' @param y The Response onto which the qrsvm shall be fitted.
-#' @param kernel a string giving the type of kernels from package \link{\code{kernlab}} to use f.e.
-#'   "rbfdot" for Radial Basis Function Kernel. All Kernels except "stringdot" supported.
-#' @param cost The Cost parameter see f.e. package \link{\code{e1071}} and \link{\code{kernlab}}
-#' @param tau The Quantile that shall be estimated. 0<=tau<=1.
-#' @param sigma,degree,scale,offset,order A possible tuning parameter for specific Kernelfunctions, see \link{\code{kernlab}}.
+#' @param kernel A string giving the type of kernels from \link[kernlab]{kernelMatrix}.
+#'   Default value is "rbfdot" for Radial Basis Function Kernel. All Kernels except \link[kernlab]{stringdot} supported.
+#' @param cost The cost parameter see \link[e1071]{svm} and \link[kernlab]{kernelMatrix}.
+#' @param tau The quantiles that shall be estimated. 0<=tau<=1.
+#' @param sigma,degree,scale,offset,order A possible tuning parameter for specific Kernelfunctions,
+#'   see \link[kernlab]{rbfdot}, \link[kernlab]{polydot}, \link[kernlab]{vanilladot}, \link[kernlab]{tanhdot},
+#'   \link[kernlab]{laplacedot}, \link[kernlab]{besseldot} or \link[kernlab]{anovadot}.
 #' @param doPar Should a parallel backend be used. Logical.
 #' @param clustnum The number of parallel tasks to use given doPar==TRUE. Default = 2.
 #' @details There is no preimplemented scaling of the input variables which should be considered beforehand.
 #'  Also optimization is based on "quadprog:solve.QP" function which can be considerably slow compared to
 #'  other SVM implementations.
-#' @return An object of class "qrsvm"
+#' @return An object of class "multqrsvm"
 #' @references "Nonparametric Quantile Regression" by I.Takeuchi, Q.V. Le, T. Sears, A.J. Smola (2004)
 #' @importFrom kernlab rbfdot polydot vanilladot tanhdot laplacedot besseldot anovadot
 #' @importFrom Matrix nearPD
@@ -33,6 +35,7 @@
 #' print(models)
 #' fittedDf <- data.frame(cbind(x, fitted(models)))
 #' names(fittedDf) <- c("x", sprintf("fitted_%02i", quant * 100))
+#' predict(models, c(-1, 0, 1))
 #'
 #' # graph
 #' library(ggplot2)
@@ -82,7 +85,7 @@ multqrsvm <- function(x, y, kernel = "rbfdot", cost = 1, tau = c(0.05, 0.25, 0.5
     model <- qrsvm(x = x, y = y, kernel = pdmat, cost = cost,
                    tau = tt, sigma = sigma, degree = degree,
                    scale = scale, offset = offset, order = order)
-    modifyList(model, list(kernel = kern))
+    model <- modifyList(model, list(kernel = kern))
     return(model)
   }
 

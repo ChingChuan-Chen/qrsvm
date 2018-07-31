@@ -17,9 +17,9 @@ summary.qrsvm <- function(object, ...) {
 
 #' Fitted values of class "qrsvm"
 #'
-#' @param object An object of class "qrsvm"
+#' @param object An object of class \link{qrsvm}.
 #' @param ... other arguments.
-#' @return A numeric vector of predicted values
+#' @return A numeric vector of fitted values.
 #' @method fitted qrsvm
 #' @importFrom stats fitted
 #' @export
@@ -29,10 +29,10 @@ fitted.qrsvm <- function(object, ...) {
 
 #' Predict an Object of class "qrsvm"
 #'
-#' @param object An object of class "qrsvm"
-#' @param newdata The predictors of the predictable data in an n X m Matrix
+#' @param object An object of class \link{qrsvm}.
+#' @param newdata The predictors of the predictable data in an n X m Matrix.
 #' @param ... other arguments.
-#' @return A numeric vector of predicted values
+#' @return A numeric vector of predicted values.
 #' @method predict qrsvm
 #' @importFrom stats predict
 #' @importFrom kernlab kernelMult

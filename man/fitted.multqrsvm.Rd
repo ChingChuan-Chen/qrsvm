@@ -7,12 +7,12 @@
 \method{fitted}{multqrsvm}(object, ...)
 }
 \arguments{
-\item{object}{An object of class "multqrsvm"}
+\item{object}{An object of class \link{multqrsvm}.}
 
 \item{...}{other arguments.}
 }
 \value{
-A numeric vector of predicted values
+A numeric matrix of fitted values.
 }
 \description{
 Fitted values of class "multqrsvm"

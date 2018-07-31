@@ -8,9 +8,9 @@ print.multqrsvm <- function(x, ...){
 
 #' Fitted values of class "multqrsvm"
 #'
-#' @param object An object of class "multqrsvm"
+#' @param object An object of class \link{multqrsvm}.
 #' @param ... other arguments.
-#' @return A numeric vector of predicted values
+#' @return A numeric matrix of fitted values.
 #' @method fitted multqrsvm
 #' @importFrom stats fitted
 #' @export
@@ -20,20 +20,18 @@ fitted.multqrsvm <- function(object, ...) {
 
 #' Predict an Object of class "multqrsvm"
 #'
-#' @param object An object of class "multqrsvm".
+#' @param object An object of class \link{multqrsvm}.
 #' @param newdata The predictors of the predictable data in an n X m Matrix.
 #' @param ... other arguments.
-#' @return A list of predicted values
+#' @return A list of predicted values.
 #' @method predict multqrsvm
+#' @importFrom stats predict
 #' @importFrom kernlab kernelMult
 #' @export
 predict.multqrsvm <- function(object, newdata, ...) {
-  prediction <- vector("list", length(object))
-  if (ncol(newdata) != ncol(object[[1]]$xtrain)) {
+  if (!is.matrix(newdata))
+    newdata <- as.matrix(newdata)
+  if (ncol(newdata) != ncol(object[[1]]$xtrain))
     stop("Newdata has different number of columns than xtrain please check consistency!")
-  }
-  prediction <- lapply(object, function(o){
-    kernelMult(o$kernel, newdata, o$xtrain, o$alpha) + o$b0
-  })
-  return(prediction)
+  return(sapply(object, predict, newdata = newdata))
 }

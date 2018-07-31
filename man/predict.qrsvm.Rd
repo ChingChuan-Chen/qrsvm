@@ -7,14 +7,14 @@
 \method{predict}{qrsvm}(object, newdata, ...)
 }
 \arguments{
-\item{object}{An object of class "qrsvm"}
+\item{object}{An object of class \link{qrsvm}.}
 
-\item{newdata}{The predictors of the predictable data in an n X m Matrix}
+\item{newdata}{The predictors of the predictable data in an n X m Matrix.}
 
 \item{...}{other arguments.}
 }
 \value{
-A numeric vector of predicted values
+A numeric vector of predicted values.
 }
 \description{
 Predict an Object of class "qrsvm"

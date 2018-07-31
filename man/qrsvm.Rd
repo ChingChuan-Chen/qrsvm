@@ -8,18 +8,20 @@ qrsvm(x, y, kernel = "rbfdot", cost = 1, tau = 0.95, sigma = 5,
   degree = 2, scale = 1, offset = 1, order = 1)
 }
 \arguments{
-\item{x}{An n X m matrix containing the predictors (n= number of observatiosn, m = number of predictors).}
+\item{x}{An n X m matrix containing the predictors (n = number of observatiosn, m = number of predictors).}
 
 \item{y}{The Response onto which the qrsvm shall be fitted.}
 
-\item{kernel}{a string giving the type of kernels from package \link{\code{kernlab}} to use f.e.
-"rbfdot" for Radial Basis Function Kernel. All Kernels except "stringdot" supported.}
+\item{kernel}{A string giving the type of kernels from \link[kernlab]{kernelMatrix}.
+Default value is "rbfdot" for Radial Basis Function Kernel. All Kernels except \link[kernlab]{stringdot} supported.}
 
-\item{cost}{The Cost parameter see f.e. package \link{\code{e1071}} and \link{\code{kernlab}}}
+\item{cost}{The cost parameter see \link[e1071]{svm} and \link[kernlab]{kernelMatrix}.}
 
-\item{tau}{The Quantile that shall be estimated. 0<=tau<=1.}
+\item{tau}{The quantile that shall be estimated. 0<=tau<=1.}
 
-\item{sigma, degree, scale, offset, order}{A possible tuning parameter for specific Kernelfunctions, see \link{\code{kernlab}}.}
+\item{sigma, degree, scale, offset, order}{A possible tuning parameter for specific Kernelfunctions,
+see \link[kernlab]{rbfdot}, \link[kernlab]{polydot}, \link[kernlab]{vanilladot}, \link[kernlab]{tanhdot},
+\link[kernlab]{laplacedot}, \link[kernlab]{besseldot} or \link[kernlab]{anovadot}.}
 }
 \value{
 An object of class "qrsvm".
